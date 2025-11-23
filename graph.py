@@ -27,26 +27,34 @@ class Graph():
             self.add_edge(to_index, from_index, cost, True) # Graphe non orienté, pourrait créer une boucle infinie
         
     def add_edge(self, string_line): # Je me méfie de celui-là, les lectures de ligne de fichier peuvent toujours créer des problèmes si mal formatées
-        strings = ["","",""]
-        index = 0
-        for char in string_line:
-            if char == ' ':
-                index += 1
-                continue
-            strings[index] += char
-            if index > 2:
-                break
-        from_index = int(strings[0])
-        to_index = int(strings[1])
-        cost = int(strings[2])
+        i = 0
+        from_string = ""
+        to_string = ""
+        cost_string = ""
+        while i < len(string_line) and string_line[i] != ' ':
+            from_string += string_line[i]
+            i += 1
+        while i < len(string_line) and string_line[i] != ' ':
+            to_string += string_line[i]
+            i += 1
+        while i < len(string_line) and string_line[i] != '\n':
+            cost_string += string_line[i]
+            i += 1
+        # vérifier que from_string, to_string et cost_string contiennent bien des entiers
+        if not (from_string.isdigit() and to_string.isdigit() and cost_string.isdigit()):
+            return
+        from_index = int(from_string)
+        to_index = int(to_string)
+        cost = int(cost_string)
         self.add_edge(from_index, to_index, cost, False)
 
     def is_connexe(self):
-        if self.vertes.len() == 0:
+        if self.vertex.keys() == []:
             return True
 
         left_to_visit = set(self.vertex.keys()) # Ensemble des sommets à visiter
-        first_vertex = self.vertex.values()[0] #on choisie arbitrairement le premier sommet du dictionnaire
+        first_vertex = list(self.vertex.values())[0] # Petit trick bizarre mais c'est accéder à un élément quelconde du dictionnaire. Utiliser la key 0 pourrait être dangereux si pour quelque raison l'on décidait de commencer à 1 par exemple
+        print(first_vertex.bfs(left_to_visit))
         return len(first_vertex.bfs(left_to_visit)) == 0 # Vérifie qu'il ne reste plus de sommets à visiter
     
 
@@ -94,7 +102,7 @@ class Vertex():
             direction_string += string_line[i]
             i += 1
         # vérifier que index_string contient bien un entier
-        if not index_string.isdigit():
+        if not index_string.isdigit() or not direction_string.isdigit():
             self.index = -1
             return
         self.index = int(index_string)
@@ -107,7 +115,7 @@ class Vertex():
     def add_edge(self, edge):
         self.edges.append(edge)
     
-    def bfs(self, left_to_visit):
+    def bfs(self, left_to_visit: set):
         left_to_visit.remove(self.index)
         for edge in self.edges:
             if edge.destination.index in left_to_visit:
