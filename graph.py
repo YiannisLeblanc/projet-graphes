@@ -13,7 +13,6 @@ class Graph():
                 elif line[0:2] == "V ":
                     self.add_vertex(Vertex(line[2:]))
 
-
     def add_vertex(self, vertex):
         self.vertex[vertex.index] = vertex
 
@@ -78,18 +77,23 @@ class Vertex():
         while i < len(string_line) and string_line[i] != ';':
             name += string_line[i]
             i += 1
+        name = name[:-1] # Enlever l'espace final
         i += 1
         while i < len(string_line) and string_line[i] != ';':
             numLigne += string_line[i]
             i += 1
+        numLigne = numLigne[:-1]
         i += 1
         while i < len(string_line) and string_line[i] != ' ':
             terminus_string += string_line[i]
             i += 1
         i += 1
-        while i < len(string_line) and string_line[i] != ' ' and string_line[i] != '\n':
+        while i < len(string_line) and string_line[i] != '\n':
             direction_string += string_line[i]
             i += 1
+        # vérifier que index_string contient bien un entier
+        if not index_string.isdigit():
+            return
         self.index = int(index_string)
         self.name = name
         self.edges = []
@@ -112,4 +116,10 @@ class Edge():
     def __init__(self, cost, destination):
         self.cost = cost
         self.destination = destination
+
+
+# Test code
+if __name__ == "__main__":
+    graph = Graph("Data/metro.txt")
+    print("Le graphe est connexe :", graph.is_connexe())
     
