@@ -11,7 +11,9 @@ class Graph():
                 if line[0:2] == "E ":
                     self.add_edge(line[2:])
                 elif line[0:2] == "V ":
-                    self.add_vertex(Vertex(line[2:]))
+                    newVertex = Vertex(line[2:])
+                    if(newVertex.index != -1):
+                        self.add_vertex(newVertex)
 
     def add_vertex(self, vertex):
         self.vertex[vertex.index] = vertex
@@ -93,6 +95,7 @@ class Vertex():
             i += 1
         # vérifier que index_string contient bien un entier
         if not index_string.isdigit():
+            self.index = -1
             return
         self.index = int(index_string)
         self.name = name
