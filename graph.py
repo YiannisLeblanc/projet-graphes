@@ -9,16 +9,17 @@ class Graph():
                 if line == "" or line == "\n":
                     continue
                 if line[0:2] == "E ":
-                    self.add_edge(line[2:])
+                    self.add_edge_from_string(line[2:])
                 elif line[0:2] == "V ":
-                    newVertex = Vertex(line[2:])
+                    newVertex = Vertex()
+                    newVertex.initFromString(line[2:])
                     if(newVertex.index != -1):
                         self.add_vertex(newVertex)
 
     def add_vertex(self, vertex):
         self.vertex[vertex.index] = vertex
 
-    def add_edge(self, from_index, to_index, cost, doneOnce): # Considère que les sommets existent déjà
+    def add_edge(self, from_index: int, to_index: int, cost: int, doneOnce = False): # Considère que les sommets existent déjà
         from_vertex = self.vertex[from_index]
         to_vertex = self.vertex[to_index]
         edge = Edge(cost, to_vertex)
@@ -26,7 +27,7 @@ class Graph():
         if not doneOnce:
             self.add_edge(to_index, from_index, cost, True) # Graphe non orienté, pourrait créer une boucle infinie
         
-    def add_edge(self, string_line): # Je me méfie de celui-là, les lectures de ligne de fichier peuvent toujours créer des problèmes si mal formatées
+    def add_edge_from_string(self, string_line): # Je me méfie de celui-là, les lectures de ligne de fichier peuvent toujours créer des problèmes si mal formatées
         i = 0
         from_string = ""
         to_string = ""
@@ -46,7 +47,7 @@ class Graph():
         from_index = int(from_string)
         to_index = int(to_string)
         cost = int(cost_string)
-        self.add_edge(from_index, to_index, cost, False)
+        self.add_edge(from_index, to_index, cost)
 
     def is_connexe(self):
         if self.vertex.keys() == []:
@@ -59,21 +60,14 @@ class Graph():
     
 
 class Vertex():
-    def __init__(self):
-        self.index = -1
-        self.name = ""
-        self.edges = []
-        self.numLigne = "" # Le numéro de ligne est un string car il y a des bis, le fait qu'il y ait des ; à la fin me conforte dans cette idée
-        self.terminus = False
-        self.direction = -1
-    def __init__(self, index, name, numLigne, terminus, direction):
+    def __init__(self, index = -1, name = "", numLigne = "", terminus = False, direction = 0):
         self.index = index
         self.name = name
         self.edges = []
         self.numLigne = numLigne # Le numéro de ligne est un string car il y a des bis, le fait qu'il y ait des ; à la fin me conforte dans cette idée
         self.terminus = terminus
         self.direction = direction
-    def __init__(self, string_line): # Déjà meilleurs que add_edge, mais toujours aussi bancal
+    def initFromString(self, string_line: str):
         i = 0
         index_string = ""
         name = ""
@@ -87,12 +81,12 @@ class Vertex():
         while i < len(string_line) and string_line[i] != ';':
             name += string_line[i]
             i += 1
-        name = name[:-1] # Enlever l'espace final
+        name = name.strip() # Enlever l'espace final
         i += 1
         while i < len(string_line) and string_line[i] != ';':
             numLigne += string_line[i]
             i += 1
-        numLigne = numLigne[:-1]
+        numLigne = numLigne.strip()
         i += 1
         while i < len(string_line) and string_line[i] != ' ':
             terminus_string += string_line[i]
@@ -109,7 +103,7 @@ class Vertex():
         self.name = name
         self.edges = []
         self.numLigne = numLigne
-        self.terminus = (terminus_string == "True")
+        self.terminus = (terminus_string.strip() == "True")
         self.direction = int(direction_string)
 
     def add_edge(self, edge):
@@ -124,7 +118,7 @@ class Vertex():
 
 
 class Edge():
-    def __init__(self, cost, destination):
+    def __init__(self, cost, destination: Vertex):
         self.cost = cost
         self.destination = destination
 
@@ -132,5 +126,10 @@ class Edge():
 # Test code
 if __name__ == "__main__":
     graph = Graph("Data/metro.txt")
-    print("Le graphe est connexe :", graph.is_connexe())
+    graph.add_edge(0, 1, 5)
+    for v in graph.vertex.values():
+        print("Sommet", v.index, ":", v.name)
+        for e in v.edges:
+            print("  ->", e.destination.index, "coût :", e.cost)
+    #print("Le graphe est connexe :", graph.is_connexe())
     
