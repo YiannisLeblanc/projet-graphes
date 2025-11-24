@@ -1,8 +1,9 @@
+#!/usr/bin/python3
 class Graph():
     def __init__(self):
         self.vertex = {}
 
-    def __init__(self, fileName):
+    def loadFile(self, fileName):
         self.vertex = {}
         with open(fileName, 'r', encoding='utf-8') as file:
             for line in file.readlines():
@@ -67,7 +68,71 @@ class Graph():
             print("Sommet", v.index, ":", v.name)
             for e in v.edges:
                 print("  ->", e.destination.index, "coût :", e.cost)
+    def acp(self):
+        newVertex = Vertex()
+        newVertex.setCopy(list(self.vertex.values())[0])
+        tree = Graph()
+        left_vertex = set(self.vertex.keys())
+        left_vertex.remove(newVertex.index)
+        tree.add_vertex(newVertex)
+        while len(left_vertex) > 0:
+            min_edge = None
+            from_vertex = None
+            for v in tree.vertex.values():
+                for e in self.vertex[v.index].edges:
+                    if e.destination.index in left_vertex:
+                        if min_edge is None or (e.cost < min_edge.cost and e.destination.index in left_vertex):
+                            min_edge = e
+                            from_vertex = v
+            if min_edge is not None:
+                newVertex = Vertex()
+                newVertex.setCopy(min_edge.destination)
+                tree.add_vertex(newVertex)
+                tree.add_edge(from_vertex.index, newVertex.index, min_edge.cost)
+                left_vertex.remove(newVertex.index)
+        return tree
+
+    def one_to_all(self, from_index): # Sous la forme d'un dico {index_sommet: (coût, index_sommet_précédent)}
+        result = {}
+        to_do = set()
+        result[from_index] = (0, -1)
+        to_do.add(from_index)
+        while len(to_do) > 0:
+            current_index = to_do.pop()
+            current_vertex = self.vertex[current_index]
+            for edge in current_vertex.edges:
+                if edge.destination.index not in result:
+                    result[edge.destination.index] = (edge.cost, current_index)
+                    to_do.add(edge.destination.index)
+                else:
+                    current_cost = result[edge.destination.index][0]
+                    new_cost = result[current_index][0] + edge.cost
+                    if new_cost < current_cost:
+                        result[edge.destination.index] = (new_cost, current_index)
+                        to_do.add(edge.destination.index)
+                if current_index == 147 or edge.destination.index == 191:
+                    print("Debug :", current_index, "->", edge.destination.index, "coût actuel :", result[edge.destination.index][0], "nouveau coût :", new_cost)
+                    pass
+        return result
     
+    def pcc(self, from_index, to_index): # Sous la forme (coût, [liste des indices du chemin])
+        one_to_all_result = self.one_to_all(from_index)
+        cost = one_to_all_result[to_index][0]
+        path = []
+        current_index = to_index
+        while current_index != -1:
+            path.append(current_index)
+            current_index = one_to_all_result[current_index][1]
+        path.reverse()
+        return (cost, path)
+    
+    def pcc_verbose(self, from_index, to_index):
+        pcc = self.pcc(from_index, to_index)
+        result = (pcc[0], [])
+        for index in pcc[1]:
+            result[1].append(self.vertex[index].name)
+        return result
+
 
 class Vertex():
     def __init__(self, index = -1, name = "", numLigne = "", terminus = False, direction = 0):
@@ -77,6 +142,13 @@ class Vertex():
         self.numLigne = numLigne # Le numéro de ligne est un string car il y a des bis, le fait qu'il y ait des ; à la fin me conforte dans cette idée
         self.terminus = terminus
         self.direction = direction
+    
+    def setCopy(self, other):
+        self.index = other.index
+        self.name = other.name
+        self.numLigne = other.numLigne
+        self.terminus = other.terminus
+        self.direction = other.direction
 
     def initFromString(self, string_line: str):
         i = 0
@@ -122,7 +194,6 @@ class Vertex():
         self.edges.append(edge)
     
     def bfs(self, left_to_visit: set):
-        print(self.index)
         left_to_visit.remove(self.index)
         for edge in self.edges:
             if edge.destination.index in left_to_visit:
@@ -138,7 +209,15 @@ class Edge():
 
 # Test code
 if __name__ == "__main__":
-    graph = Graph("Data/metro.txt")
+    graph = Graph()
+    graph.loadFile("Data/metro.txt")
     print("Le graphe est connexe :", graph.is_connexe())
     print("Nombre de sommets dans le graphe :", len(graph.vertex))
     print("Nombre d'arêtes dans le graphe :", sum(len(v.edges) for v in graph.vertex.values()) // 2) # Divisé par 2 car graphe non orienté
+    print("Arbre couvrant de coût minimal :")
+    acp_graph = graph.acp()
+    acp_graph.print()
+    print("Connexité de l'arbre couvrant :", acp_graph.is_connexe())
+    print("Nombre de sommets de l'ACP égal au graphe d'origine :", len(acp_graph.vertex) == len(graph.vertex))
+    print("Plus cours chemin de 0268 à 0276:")
+    print(graph.pcc_verbose(268, 276))
