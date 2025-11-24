@@ -8,13 +8,13 @@ class Graph():
             for line in file.readlines():
                 if line == "" or line == "\n":
                     continue
-                if line[0:2] == "E ":
-                    self.add_edge_from_string(line[2:])
-                elif line[0:2] == "V ":
+                if line[0:2] == "V ":
                     newVertex = Vertex()
                     newVertex.initFromString(line[2:])
                     if(newVertex.index != -1):
                         self.add_vertex(newVertex)
+                elif line[0:2] == "E ":
+                    self.add_edge_from_string(line[2:])
 
     def add_vertex(self, vertex):
         self.vertex[vertex.index] = vertex
@@ -35,18 +35,23 @@ class Graph():
         while i < len(string_line) and string_line[i] != ' ':
             from_string += string_line[i]
             i += 1
+        i += 1
         while i < len(string_line) and string_line[i] != ' ':
             to_string += string_line[i]
             i += 1
+        i += 1
         while i < len(string_line) and string_line[i] != '\n':
             cost_string += string_line[i]
             i += 1
         # vérifier que from_string, to_string et cost_string contiennent bien des entiers
+        from_string = from_string.strip()
+        to_string = to_string.strip()
+        cost_string = cost_string.strip()
         if not (from_string.isdigit() and to_string.isdigit() and cost_string.isdigit()):
             return
-        from_index = int(from_string)
-        to_index = int(to_string)
-        cost = int(cost_string)
+        from_index = int(from_string.strip())
+        to_index = int(to_string.strip())
+        cost = int(cost_string.strip())
         self.add_edge(from_index, to_index, cost)
 
     def is_connexe(self):
@@ -55,8 +60,13 @@ class Graph():
 
         left_to_visit = set(self.vertex.keys()) # Ensemble des sommets à visiter
         first_vertex = list(self.vertex.values())[0] # Petit trick bizarre mais c'est accéder à un élément quelconde du dictionnaire. Utiliser la key 0 pourrait être dangereux si pour quelque raison l'on décidait de commencer à 1 par exemple
-        print(first_vertex.bfs(left_to_visit))
         return len(first_vertex.bfs(left_to_visit)) == 0 # Vérifie qu'il ne reste plus de sommets à visiter
+    
+    def print(self):
+        for v in self.vertex.values():
+            print("Sommet", v.index, ":", v.name)
+            for e in v.edges:
+                print("  ->", e.destination.index, "coût :", e.cost)
     
 
 class Vertex():
@@ -67,6 +77,7 @@ class Vertex():
         self.numLigne = numLigne # Le numéro de ligne est un string car il y a des bis, le fait qu'il y ait des ; à la fin me conforte dans cette idée
         self.terminus = terminus
         self.direction = direction
+
     def initFromString(self, string_line: str):
         i = 0
         index_string = ""
@@ -95,7 +106,8 @@ class Vertex():
         while i < len(string_line) and string_line[i] != '\n':
             direction_string += string_line[i]
             i += 1
-        # vérifier que index_string contient bien un entier
+        index_string = index_string.strip()
+        direction_string = direction_string.strip()
         if not index_string.isdigit() or not direction_string.isdigit():
             self.index = -1
             return
@@ -103,13 +115,14 @@ class Vertex():
         self.name = name
         self.edges = []
         self.numLigne = numLigne
-        self.terminus = (terminus_string.strip() == "True")
+        self.terminus = (terminus_string == "True")
         self.direction = int(direction_string)
 
     def add_edge(self, edge):
         self.edges.append(edge)
     
     def bfs(self, left_to_visit: set):
+        print(self.index)
         left_to_visit.remove(self.index)
         for edge in self.edges:
             if edge.destination.index in left_to_visit:
@@ -126,10 +139,5 @@ class Edge():
 # Test code
 if __name__ == "__main__":
     graph = Graph("Data/metro.txt")
-    graph.add_edge(0, 1, 5)
-    for v in graph.vertex.values():
-        print("Sommet", v.index, ":", v.name)
-        for e in v.edges:
-            print("  ->", e.destination.index, "coût :", e.cost)
-    #print("Le graphe est connexe :", graph.is_connexe())
+    print("Le graphe est connexe :", graph.is_connexe())
     
