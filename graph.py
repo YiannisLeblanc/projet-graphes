@@ -140,4 +140,5 @@ class Edge():
 if __name__ == "__main__":
     graph = Graph("Data/metro.txt")
     print("Le graphe est connexe :", graph.is_connexe())
-    
+    print("Nombre de sommets dans le graphe :", len(graph.vertex))
+    print("Nombre d'arêtes dans le graphe :", sum(len(v.edges) for v in graph.vertex.values()) // 2) # Divisé par 2 car graphe non orienté
